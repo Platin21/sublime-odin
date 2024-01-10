@@ -8,6 +8,8 @@ scope: source.odin
 contexts:
   main:
     - include: len
+    - include: assert
+    - include: raw_data
     - include: compiler_keywords
     - include: function_name_head
     - include: struct
@@ -57,9 +59,6 @@ contexts:
           captures:
             1: keyword.operator.pointer.odin
             2: storage.type.returned.odin
-  assert:
-    - match: assert
-      scope: support.function.assert.odin
   basic_return_type:
     - match: '(->)\s*(\^)*(\[\])*(\w+|\!)'
       captures:
@@ -311,11 +310,17 @@ contexts:
         5: keyword.operator.double_point.odin
         6: string.quoted.double.odin
   keywords:
-    - match: \b(or_return|or_continue|return|do|if|defer|then|try|else|in|export|when|for|switch|notin|inline|no_inline|size_of|align_of|type_of|break|case|continue|fallthrough|context)\b
+    - match: \b(asm|or_return|or_continue|return|do|if|defer|then|try|else|in|export|when|for|switch|notin|inline|no_inline|size_of|align_of|type_of|break|case|continue|fallthrough|context)\b
       scope: keyword.control.odin
   len:
     - match: len\s+\(
-      scope: support.function.string_len.odin
+      scope: support.function.len.odin
+  assert:
+    - match: assert\s+\(
+      scope: support.function.assert.odin
+  raw_data:
+    - match: raw_data\s+\(
+      scope: support.function.raw_data.odin
   math_operator:
     - match: (\+|\-|/|\*|=)(?!(=|\+|\-|/|\*))
       scope: keyword.operator.math.odin
