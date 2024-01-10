@@ -1,199 +1,520 @@
 %YAML 1.2
 ---
-# http://www.sublimetext.com/docs/3/syntax.html
+# http://www.sublimetext.com/docs/syntax.html
 name: Odin
 file_extensions:
   - odin
-first_line_match: "-[*]-( Mode:)? Odin -[*]-"
 scope: source.odin
-variables:
-  identifier: '\b[[:alpha:]_][[:alnum:]_]*\b'
-  type_chars: '[[:alnum:]\s,._^<>\[\]-]'
-  screaming_identifier: '\b[A-Z_](?![a-z])[A-Z_0-9]+\b'
-
 contexts:
   main:
-    - include: global
-
-  global:
-    - include: comments
-    - include: types
+    - include: len
+    - include: compiler_keywords
+    - include: function_name_head
+    - include: struct
+    - include: union
+    - include: enum
+    - include: foreign
+    - include: using
+    - include: test
     - include: keywords
-    - include: functions-and-declarations
-    - include: strings
-    - include: string-escaped-char
-
-  block-comment:
+    - include: assert
+    - include: foreign_import_block
+    - include: foreign_import
+    - include: import
+    - include: renamed_import
+    - include: package
+    - include: comment
+    - include: modifier
+    - include: return_type
+    - include: constant
+    - include: triple_slash_operator
+    - include: operators
+    - include: math_operator
+    - include: data_types
+    - include: number
+    - include: param
+    - include: variable
+    - include: string
+    - include: string_raw
+    - include: string_char
+  comment:
+    - include: comment_single
+    - include: comment_multi
+  advnc_return_type:
+    - match: (->)\s*\(
+      captures:
+        1: keyword.operator.return.odin
+      push:
+        - match: \)
+          captures:
+            1: keyword.operator.return.odin
+          pop: true
+        - match: '(\^)*([^0-9]{1}\w*):(\w+)'
+          captures:
+            1: variable.parameter.odin
+            2: storage.type.returned.odin
+        - match: (\^)*(\w+)
+          captures:
+            1: keyword.operator.pointer.odin
+            2: storage.type.returned.odin
+  assert:
+    - match: assert
+      scope: support.function.assert.odin
+  basic_return_type:
+    - match: '(->)\s*(\^)*(\[\])*(\w+|\!)'
+      captures:
+        1: keyword.operator.return.odin
+        2: keyword.operator.pointer.odin
+        4: storage.type.returned.odin
+  comment_doc_info:
+    - match: ((@)*(INFO))\((.+)\)\s*:\s*(.*)
+      captures:
+        1: markup.bold
+        5: markup.italic
+  comment_doc_paramter:
+    - match: '(-){1,}\s+(Parameter|parameter)\s+(\w+)\s*:'
+      captures:
+        1: markup.italic.odin
+        2: markup.bold.odin
+        3: markup.other.var_name.odin
+  comment_doc_returns:
+    - match: '(-){1,}\s+(Returns|returns)\s*:'
+      captures:
+        1: markup.italic.odin
+        2: markup.bold.odin
+  comment_doc_todo:
+    - match: '((@)*(TODO))\((.+)\)\s*:'
+      captures:
+        1: markup.bold
+        4: markup.italic
+  comment_multi:
     - match: /\*
-      scope: punctuation.definition.comment.odin
+      comment: This is brilliant!
       push:
         - meta_scope: comment.block.odin
         - match: \*/
-          scope: punctuation.definition.comment.odin
           pop: true
-        - include: block-comment
-
-  comments:
-    - include: block-comment
-    - match: //
-      scope: punctuation.definition.comment.odin
-      push:
-        - meta_scope: comment.line.double-slash.odin
-        - match: \n
-          pop: true
-    - match: "#!"
-      scope: punctuation.definition.comment.odin
-      push:
-        - meta_scope: comment.line.double-slash.odin
-        - match: \n
-          pop: true
-
-  keywords:
-    - match: \b(import|foreign|package)\b
-      scope: keyword.control.odin
-    - match: \b(if|else|when|for|in|notin|not_in|defer|switch|return|const|do|where)\b
-      scope: keyword.control.odin
-    - match: \b(fallthrough|break|continue|case|dynamic)\b
-      scope: keyword.control.odin
-    - match: \b(using|inline|no_inline)\b
-      scope: keyword.control.odin
-    - match: \b(asm|yield|await)\b
-      scope: keyword.control.odin
-    - match: \b(distinct|opaque)\b
-      scope: keyword.operator.odin
-    - match: \b(context)\b
-      scope: keyword.operator.odin
-    - match: \b(nil|true|false)\b
+        - include: comment_multi
+        - include: comment_doc_info
+        - include: comment_doc_todo
+        - include: comment_doc_returns
+        - include: comment_doc_paramter
+  comment_single:
+    - match: //(.*)
+      scope: comment.line.double-slash.odin
+  compiler_keywords:
+    - match: "(#c_vararg|#no_bounds_check)"
+      scope: keyword.other.vararg.odin
+  constant:
+    - include: constant_type
+    - include: constant_string
+    - include: constant_number
+    - include: constants_other
+    - include: constants_language
+  constant_const:
+    - match: '(\w+)\s*(::)\s*((distinct)\s+){0,1}(\w+)(;)+'
+      captures:
+        1: constant.other.number.odin
+        2: keyword.operator.bound.odin
+        4: keyword.other.uniqueness.odin
+        5: constant.other.constant.odin
+  constant_number:
+    - match: '(\w+)\s*(::)\s*((distinct)\s+){0,1}((0(o)[0-8]+)|(0(x)[0-9A-Fa-f]*)|(([1-9]+[0-9]*)|(0)))(;)+'
+      captures:
+        1: constant.other.number.odin
+        2: keyword.operator.bound.odin
+        4: keyword.other.uniqueness.odin
+        5: constant.numeric.odin
+        6: constant.numeric.odin
+        7: keyword.operator.hex.odin
+        10: keyword.operator.oct.odin
+  constant_string:
+    - match: '(\w*)\s*(::)\s*((distinct)\s*){0,1}(\"\w*\")'
+      captures:
+        1: constant.other.string.odin
+        2: keyword.operator.bound.odin
+        4: keyword.other.uniqueness.odin
+        5: string.quoted.double.constant.odin
+  constant_type:
+    - match: '(\w*)\s*(::)\s*((distinct)\s*){0,1}(#type)*\s+(proc)*(\w+)*(;)*'
+      captures:
+        1: constant.other.string.odin
+        2: keyword.operator.bound.odin
+        3: keyword.other.uniqueness.odin
+        5: keyword.other.type.odin
+        6: storage.type.proc.odin
+        7: storage.type.odin
+  constants_language:
+    - match: \b(false|true|nil)\b
       scope: constant.language.odin
-    - match: '\b(\d(\d|_)*(.\d(\d|_)*)?)((e|E)(\+|-)?\d+)?[ijk]?\b'
+  constants_other:
+    - match: (\w+)\s*(::)\s*(distinct)*\s*(\w+)
+      captures:
+        1: constant.other.any.odin
+        2: keyword.operator.bound.odin
+        3: keyword.other.uniqueness.odin
+  data_types:
+    - match: '\b(\[\])*(bool|b8|b16|b32|b64|uint|uintptr|int|(u|i)8(le|be)*|(u|i)16(le|be)*|(u|i)32(le|be)*|(u|i)64(le|be)*|(u|i)128(le|be)*|f32|f64|complex64|complex128|rune|string|cstring|rawptr|typeid|any)\b'
+      scope: storage.type.all.odin
+  enum:
+    - match: '(\w+)\s*(::)\s*(enum)\s*(\w*)\s*(\{)*'
+      captures:
+        1: entity.name.function.odin
+        2: keyword.operator.bound.odin
+        3: keyword.operator.bound.odin
+        4: storage.type.enum.odin
+        6: storage.type.any.odin
+      push:
+        - match: '}((;))*'
+          captures:
+            1: entity.name.function.odin
+            2: keyword.operator.bound.odin
+            3: keyword.operator.bound.odin
+            4: storage.type.enum.odin
+            6: storage.type.any.odin
+          pop: true
+        - include: comment
+        - include: number
+        - include: string
+        - include: enum_field
+        - include: enum_comma
+  enum_comma:
+    - match: ','
+      scope: keyword.operator.bound.odin
+  enum_field:
+    - match: (\w+)\s*((,)|(=\s*))*
+      captures:
+        1: constant.other.enum.field.odin
+  field:
+    - match: '([^ \t]+)\s*(,)'
+      captures:
+        1: variable.other.name.odin
+        2: keyword.operator.comma.odin
+  field_and_type:
+    - match: '(\w+)\s*(\:)\s*((\w+)(,){1,}|(\#type))'
+      comment: Is fixed?
+      captures:
+        1: variable.other.name.odin
+        2: keyword.operator.seperator.odin
+        3: keyword.operator.comma.odin
+        4: storage.type.all.odin
+        6: storage.type.all.odin
+  field_and_typed_array:
+    - include: field_and_typed_array1
+    - include: field_and_typed_array2
+  field_and_typed_array1:
+    - match: '(\w+)\s*(\:)\s*(((\[)([^\]\n]+)(\]))(\w+)(,){1,})'
+      comment: For arrays!
+      captures:
+        1: variable.other.name.odin
+        2: keyword.operator.seperator.odin
+        4: constant.numeric.odin
+        5: keyword.operator.bracket.odin
+        7: keyword.operator.bracket.odin
+        8: storage.type.all.odin
+        9: keyword.operator.comma.odin
+  field_and_typed_array2:
+    - match: '(\w+)\s*(\:)\s*(((\[)([^\]\n]+)(\]))((\[)([^\]\n]+)(\]))(\w+)(,){1,})'
+      comment: For arrays! with double brackets
+      captures:
+        1: variable.other.name.odin
+        2: keyword.operator.seperator.odin
+        4: constant.numeric.odin
+        5: keyword.operator.bracket.odin
+        7: keyword.operator.bracket.odin
+        9: keyword.operator.bracket.odin
+        10: constant.numeric.odin
+        11: keyword.operator.bracket.odin
+        12: storage.type.all.odin
+        13: keyword.operator.comma.odin
+  field_and_typed_pointer:
+    - match: '(\w+)\s*(\:)\s*((\^{0,6})(\w+)(,){1,})'
+      comment: For arrays!
+      captures:
+        1: variable.other.name.odin
+        2: keyword.operator.seperator.odin
+        4: keyword.operator.pointer.odin
+        5: storage.type.all.odin
+        6: keyword.operator.comma.odin
+  param:
+      - include: array_param
+      - include: pointer_param
+  array_param:
+    - match: '(\w+)\s*(\:)\s*(((\[)([^\]\n]+)(\]))(((\w+)(\.{1}))|(\w+))+)'
+      captures:
+        1: variable.other.name.odin
+        5: keyword.operator.seperator.odin
+        6: constant.numeric.odin
+        7: keyword.operator.seperator.odin
+        10: storage.type.all.odin
+        12: storage.type.all.odin
+  pointer_param:
+    - match: '(\w+)\s*(\:)\s*(\^)(((\w+)(\.*)(\w+))|(\.*)(\w+))+'
+      captures:
+        1: variable.other.name.odin
+        3: keyword.operator.pointer.odin
+        6: storage.type.all.odin
+        8: storage.type.all.odin
+        10: storage.type.all.odin
+  field_array_number:
+    - match: '\[([oxd0-9a-fA-F])+\]'
+      captures:
+        1: keyword.operator.seperator.odin
+  foreign:
+    - match: '(foreign)\s+([^ \t]+)\s+{'
+      captures:
+        1: storage.modifier.foreign.odin
+        2: entity.name.section.package.odin
+      push:
+        - match: '}(;)*'
+          captures:
+            1: storage.modifier.foreign.odin
+            2: entity.name.section.package.odin
+          pop: true
+        - include: main
+  foreign_import:
+    - match: '(foreign)\s+(import)\s+(\w+)*\s*(\"(([^\t: ]+)(:))*([^\n\t ]+)\")'
+      comment: '3 = { name = ''entity.name.type.odin''; };'
+      captures:
+        1: storage.modifier.foreign.odin
+        2: keyword.control.import.odin
+        4: string.quoted.double.odin
+        6: string.quoted.double.odin
+        7: keyword.operator.double_point.odin
+        8: string.quoted.double.odin
+  foreign_import_block:
+    - match: '(foreign)\s+(import)\s+(\w+)\s+({)+'
+      comment: '3 = { name = ''entity.name.type.odin''; };'
+      captures:
+        1: storage.modifier.foreign.odin
+        2: keyword.control.import.odin
+      push:
+        - match: '}'
+          captures:
+            1: storage.modifier.foreign.odin
+            2: keyword.control.import.odin
+          pop: true
+        - include: string_char
+        - include: string
+  function_name_head:
+    - match: (\w+)\s*(::)\s*(inline\s*)*(proc)
+      captures:
+        1: entity.name.function.odin
+        2: keyword.operator.bound.odin
+        3: storage.modifier.inline.odin
+        4: storage.type.proc.odin
+  import:
+    - match: '(import)\s+(\"((\w+)\s*(:)\s*)*([^\n ]+)\")'
+      captures:
+        1: keyword.control.import.odin
+        2: string.quoted.double.odin
+        5: keyword.operator.double_point.odin
+        6: string.quoted.double.odin
+  keywords:
+    - match: \b(or_return|return|do|if|defer|then|try|else|in|export|when|for|switch|notin|inline|no_inline|size_of|align_of|type_of|break|case|continue|fallthrough|context)\b
+      scope: keyword.control.odin
+  len:
+    - match: len\s+\(
+      scope: support.function.string_len.odin
+  math_operator:
+    - match: (\+|\-|/|\*|=)(?!(=|\+|\-|/|\*))
+      scope: keyword.operator.math.odin
+  modifier:
+    - match: \@\(
+      push:
+        - meta_scope: keyword.other.attribute.odin
+        - match: \)
+          pop: true
+        - include: modifier_link_name
+        - include: modifier_link_prefix
+        - include: modifier_calling_convention
+        - include: modifier_private
+        - include: modifier_deprecated
+        - include: modifier_optimization
+  modifier_call_c:
+    - match: '(default_calling_convention)[\t ]*\=[\t ]*(\"(c|cdecl)\")'
+      captures:
+        1: storage.modifier.call.c.odin
+        2: string.quoted.double.odin
+  modifier_call_contextless:
+    - match: '(default_calling_convention)[\t ]*\=[\t ]*(\"(contextless)\")'
+      captures:
+        1: storage.modifier.contextless.odin
+        2: string.quoted.double.odin
+  modifier_call_fast:
+    - match: '(default_calling_convention)[\t ]*\=[\t ]*(\"(fast|fastcall)\")'
+      captures:
+        1: storage.modifier.call.fast.odin
+        2: string.quoted.double.odin
+  modifier_call_invalid_one:
+    - match: '(default_calling_convention)[\t ]*\=[\t ]*(\"(.*)\")'
+      captures:
+        1: keyword.other.call.invalid.odin
+        2: string.quoted.double.odin
+        3: invalid.illegal.odin
+  modifier_call_odin:
+    - match: '(default_calling_convention)[\t ]*\=[\t ]*(\"(odin)\")'
+      captures:
+        1: storage.modifier.call.odin.odin
+        2: string.quoted.double.odin
+  modifier_call_std:
+    - match: '(default_calling_convention)[\t ]*\=[\t ]*(\"(std|stdcall)\")'
+      captures:
+        1: storage.modifier.call.stdcall.odin
+        2: string.quoted.double.odin
+  modifier_optimization:
+    - match: '(optimization_mode)[\t ]*\=[\t ]*(\"(speed|size|.*)\")'
+      captures:
+        1: storage.modifier.call.stdcall.odin
+        2: string.quoted.double.odin
+  modifier_deprecated:
+    - match: '(deprecated)[\t ]*\=[\t ]*(\"(.*)\")'
+      captures:
+        1: keyword.other.call.invalid.odin
+        2: string.quoted.double.odin
+  modifier_calling_convention:
+    - include: modifier_call_odin
+    - include: modifier_call_contextless
+    - include: modifier_call_std
+    - include: modifier_call_c
+    - include: modifier_call_fast
+    - include: modifier_call_invalid_one
+  modifier_link_name:
+    - match: (link_name)\s*=\s*(\"(.*)\")
+      captures:
+        1: storage.modifier.link.name.odin
+        2: string.quoted.double.odin
+  modifier_link_prefix:
+    - match: (link_prefix)\s*\=\s*(\"(.*)\")
+      captures:
+        1: storage.modifier.link.prefix.odin
+        2: string.quoted.double.odin
+  modifier_private:
+    - match: private
+      scope: storage.modifier.call.c.odin
+  number:
+    - include: number_octal
+    - include: number_hex
+    - include: number_decimal
+    - include: number_duodezimal
+  number_decimal:
+    - match: '\b(([1-9]+[0-9]*)|(0))\b'
       scope: constant.numeric.odin
-    - match: '\b((0b(0|1|_)+)|(0o(\d|_)+)|(0d(\d|_)+)|(0[xXh](\h|_)+))[ijk]?\b'
-      scope: constant.numeric.odin
-    - match: '---'
-      scope: constant.numeric.odin
-    - match: \b(macro|struct|enum|union|map|bit_field|bit_set)\b
-      scope: storage.type.odin
-    - match: \b(cast|transmute|auto_cast)\b
-      scope: keyword.function.odin
-    - match: '([#]\s*{{identifier}})'
-      scope: keyword.tag.odin
-    - match: '(\x40\s*{{identifier}})'
-      scope: keyword.tag.odin
-    - match: '(\x40\s*[(]\s*{{identifier}})\s*[)]'
-      scope: keyword.tag.odin
-    - match: '@'
-      scope: keyword.operator.odin
-
-  functions-and-declarations:
-    - match: '\b({{identifier}})\s*[:]\s*[:]\s*(proc)'
+  number_duodezimal:
+    - match: '\b(0(z)[0-9XE]*)\b'
       captures:
-        1: meta.function.odin entity.name.function.odin
-        2: storage.type.odin
-    - match: '\b({{identifier}})\s*[:]\s*[:]\s*(inline|no_inline)\s+(proc)'
+        0: constant.numeric.odin
+        1: keyword.operator.doz.odin
+  number_hex:
+    - match: '\b(0(x)[0-9A-Fa-f]*)\b'
       captures:
-        1: meta.function.odin entity.name.function.odin
-        2: keyword.control.odin
-        3: storage.type.odin
-    - match: \b(size_of|align_of|offset_of|type_of)\b\s*\(
+        0: constant.numeric.odin
+        1: keyword.operator.hex.odin
+  number_octal:
+    - match: '\b(0(o)[0-8]+)\b'
       captures:
-        1: keyword.function.odin
-    - match: \b(type_info_of|typeid_of)\b\s*\(
+        0: constant.numeric.odin
+        1: keyword.operator.hex.odin
+  operators:
+    - match: (:=|\+=|-=|\/=|\*=|<=|==|\!=|&|&&|\|\||\||\~|\^)
+      scope: keyword.operator.same.odin
+  package:
+    - match: (package)\s+(\w+)(;)*
+      comment: '2 = { name = ''entity.name.section.package.odin''; };'
       captures:
-        1: keyword.function.odin
-    - match: (proc|macro)\s*[\(]
+        1: keyword.other.package.odin
+        3: keyword.operator.scolon.odin
+  renamed_import:
+    - match: '(import)\s+(\w+)\s+(\"((\w+)\s*(:)\s*)*([^\n ]+)\")'
       captures:
-        1: storage.type.odin
-    - match: ({{identifier}})\s*[!]?\s*[\(]
-      captures:
-        1: support.function.odin
-    - match: '\b({{identifier}})\s*[:]\s*[:]\s*(struct|union|enum|bit_field|bit_set)'
-      captures:
-        1: meta.type.odin entity.name.type.odin
-        2: storage.type.odin
-    - match: '\b({{identifier}})\s*[:]\s*[:]\s*([#]\s*type)'
-      captures:
-        1: meta.type.odin entity.name.type.odin
-        2: keyword.tag.odin
-    - match: '\b({{identifier}})\s*[:]\s*[:]\s*'
-      captures:
-        1: meta.constant.odin entity.name.type.odin
-
-  types:
-    - match: '\b(struct|enum|union|bit_field|bit_set)\b(?:(\{)(\}))?'
-      captures:
-        1: storage.type.odin
-        2: meta.block.odin punctuation.definition.block.begin.odin
-        3: meta.block.odin punctuation.definition.block.end.odin
-    - match: '\b(proc)\b'
-      scope: storage.type.odin
-    - match: (\[)(\d*)(\])(?=[[:alpha:]_])
-      scope: meta.brackets.odin
-      captures:
-        1: punctuation.definition.brackets.begin.odin
-        2: constant.numeric.odin
-        3: punctuation.definition.brackets.end.odin
-    - include: basic-types
-    - match: '\$\s*({{identifier}})'
-      scope: storage.type.odin
-
-  basic-types:
-    - match: '\b(i8|i16|i32|i64|i128|int)\b'
-      scope: storage.type.odin
-    - match: '\b(u8|u16|u32|u64|u128|uint|uintptr)\b'
-      scope: storage.type.odin
-    - match: '\b(f16|f32|f64)\b'
-      scope: storage.type.odin
-    - match: '\b(f16le|f32le|f64le)\b'
-      scope: storage.type.odin
-    - match: '\b(f16be|f32be|f64be)\b'
-      scope: storage.type.odin
-    - match: '\b(complex32|complex64|complex128)\b'
-      scope: storage.type.odin
-    - match: '\b(quaternion64|quaternion128|quaternion256)\b'
-      scope: storage.type.odin
-    - match: '\b(bool|b8|b16|b32|b64)\b'
-      scope: storage.type.odin
-    - match: '\b(string|cstring|rune)\b'
-      scope: storage.type.odin
-    - match: '\b(rawptr)\b'
-      scope: storage.type.odin
-    - match: '\b(any|typeid)\b'
-      scope: storage.type.odin
-    - match: '\b(byte)\b'
-      scope: storage.type.odin
-
-    - match: '\b(u16le|u32le|u64le|u128le|i16le|i32le|i64le|i128le)\b'
-      scope: storage.type.odin
-    - match: '\b(i16be|i32be|i64be|i128be|u16be|u32be|u64be|u128be)\b'
-      scope: storage.type.odin
-
-  strings:
+        1: keyword.control.import.odin
+        2: storage.type.all.odin
+        3: string.quoted.double.odin
+        6: keyword.operator.double_point.odin
+        8: string.quoted.double.odin
+  return_type:
+    - include: basic_return_type
+    - include: advnc_return_type
+  string:
     - match: '"'
-      scope: punctuation.definition.string.begin.odin
       push:
-        - meta_scope: string.quoted.double.odin
+        - meta_scope: string.quoted.double.constant.odin
+        - match: \\.
+          scope: string.quoted.double.constant.odin
         - match: '"'
-          scope: punctuation.definition.string.end.odin
           pop: true
-        - include: string-escaped-char
+  string_raw:
     - match: "`"
-      scope: punctuation.definition.string.begin.odin
       push:
-        - meta_scope: string.quoted.raw.odin
+        - meta_scope: string.quoted.double.constant.raw.odin
+        - match: \\.
+          scope: string.quoted.double.constant.raw.odin
         - match: "`"
-          scope: punctuation.definition.string.end.odin
           pop: true
+  string_char:
     - match: "'"
-      scope: punctuation.definition.string.begin.odin
       push:
-        - meta_scope: string.quoted.raw.odin
+        - meta_scope: string.quoted.single.constant.odin
         - match: "'"
-          scope: punctuation.definition.string.end.odin
           pop: true
-        - include: string-escaped-char
-
-  string-escaped-char:
-    - match: '\\(\\|[abefnrutv''"]|x\h{2}|u\h{4}|U\h{8}|[0-7]{3})'
-      scope: constant.character.escape.odin
-    - match: \\.
-      scope: invalid.illegal.unknown-escape.odin
+  struct:
+    - match: '((\w+))\s*(::)\s*(struct)\s*(\#packed|\#raw_union\s*)*({)*'
+      captures:
+        2: entity.name.type.struct.odin
+        3: keyword.operator.bound.odin
+        4: keyword.other.packed.odin
+        5: storage.type.struct.odin
+      push:
+        - match: '}(;)*'
+          captures:
+            2: entity.name.type.struct.odin
+            3: keyword.operator.bound.odin
+            4: keyword.other.packed.odin
+            5: storage.type.struct.odin
+          pop: true
+        - include: comment
+        - include: field_and_type
+        - include: field_and_typed_pointer
+        - include: field_and_typed_array
+        - include: field
+  test:
+    - match: (\@)(test)
+      captures:
+        1: keyword.operator.math.odin
+        2: constant.language.odin
+  triple_slash_operator:
+    - match: '([-]{3})'
+      scope: keyword.other.odin
+  union:
+    - match: '((\w+))\s*(::)\s*(union)\s*(\#raw_union\s+)*{'
+      captures:
+        2: entity.name.type.struct.odin
+        3: keyword.operator.bound.odin
+        4: keyword.other.packed.odin
+        5: storage.type.struct.odin
+      push:
+        - match: '}(;)*'
+          captures:
+            2: entity.name.type.struct.odin
+            3: keyword.operator.bound.odin
+            4: keyword.other.packed.odin
+            5: storage.type.struct.odin
+          pop: true
+        - include: comment
+        - include: field_and_type
+        - include: field_and_typed_array
+        - include: field_and_typed_pointer
+        - include: field
+  using:
+    - match: '(using)([\n ]+)([^\n ]+)(;)'
+      captures:
+        1: keyword.control.using.odin
+        3: entity.name.section.package.odin
+        4: keyword.operator.scolon.odin
+  variable:
+    - match: (((\w+)\s*,\s*)*(\w+)\s*)(:)\s*((\^)*\w+)
+      captures:
+        1: variable.other.decl.odin
+        2: variable.other.decl.odin
+        6: storage.type.odin
+        7: keyword.operator.pointer.odin
