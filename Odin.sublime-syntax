@@ -297,12 +297,12 @@ contexts:
         - include: string_char
         - include: string
   function_name_head:
-    - match: (\w+)\s*(::)\s*(inline\s*)*(proc)
+    - match: (\w+)\s*(::)\s*(\#(force_no_inline|force_inline)\s*)*(proc)
       captures:
         1: entity.name.function.odin
         2: keyword.operator.bound.odin
-        3: storage.modifier.inline.odin
-        4: storage.type.proc.odin
+        3: keyword.other.force_inline.odin
+        5: storage.type.proc.odin
   import:
     - match: '(import)\s+(\"((\w+)\s*(:)\s*)*([^\n ]+)\")'
       captures:
@@ -311,7 +311,7 @@ contexts:
         5: keyword.operator.double_point.odin
         6: string.quoted.double.odin
   keywords:
-    - match: \b(or_return|return|do|if|defer|then|try|else|in|export|when|for|switch|notin|inline|no_inline|size_of|align_of|type_of|break|case|continue|fallthrough|context)\b
+    - match: \b(or_return|or_continue|return|do|if|defer|then|try|else|in|export|when|for|switch|notin|inline|no_inline|size_of|align_of|type_of|break|case|continue|fallthrough|context)\b
       scope: keyword.control.odin
   len:
     - match: len\s+\(
