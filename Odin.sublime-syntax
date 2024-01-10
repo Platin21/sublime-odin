@@ -201,6 +201,7 @@ contexts:
   field_and_typed_array:
     - include: field_and_typed_array1
     - include: field_and_typed_array2
+    - include: field_and_typed_array3
   field_and_typed_array1:
     - match: '(\w+)\s*(\:)\s*(((\[)([^\]\n]+)(\]))(\w+)(,){1,})'
       comment: For arrays!
@@ -226,6 +227,16 @@ contexts:
         11: keyword.operator.bracket.odin
         12: storage.type.all.odin
         13: keyword.operator.comma.odin
+  field_and_typed_array3:
+    - match: '(\w+)\s*(\:)\s*(((\[)\s*(\]))(\w+)(,){1,})'
+      comment: For arrays!
+      captures:
+        1: variable.other.name.odin
+        2: keyword.operator.seperator.odin
+        5: keyword.operator.bracket.odin
+        6: keyword.operator.bracket.odin
+        7: storage.type.all.odin
+        8: keyword.operator.comma.odin
   field_and_typed_pointer:
     - match: '(\w+)\s*(\:)\s*((\^{0,6})(\w+)(,){1,})'
       comment: For arrays!
